@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/scrapetok_accounts
+    username: postgres
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+logging:
+  level:
+    com.scrapetok.accounts: INFO
+    org.springframework.security: WARN
