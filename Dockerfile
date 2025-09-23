@@ -1,9 +1,5 @@
-# Usar imagen base de OpenJDK 17
-FROM openjdk:17-jdk-slim
-
-# Información del mantenedor
-LABEL maintainer="ScrapeTok Team"
-LABEL service="accounts-service"
+# Multi-stage build para optimizar el tamaño de la imagen
+FROM maven:3.8.7-openjdk-17 AS build
 
 # Crear directorio de trabajo
 WORKDIR /app
@@ -20,18 +16,27 @@ COPY src src
 RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
+# Stage 2: Imagen final optimizada
+FROM openjdk:17-jdk-slim
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar el JAR compilado desde el stage anterior
+COPY --from=build /app/target/*.jar app.jar
+
 # Exponer puerto
 EXPOSE 8081
 
 # Variables de entorno por defecto
-ENV SPRING_PROFILES_ACTIVE=docker
-ENV DB_HOST=postgres
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV DB_HOST=localhost
 ENV DB_PORT=5432
-ENV DB_NAME=scrapetok_accounts
+ENV DB_NAME=postgres
 ENV DB_USER=postgres
 ENV DB_PASSWORD=password
-ENV JWT_SECRET=mySecretKey
+ENV JWT_SECRET=default-jwt-secret
 ENV JWT_EXPIRATION=86400000
 
-# Comando para ejecutar la aplicación
-CMD ["java", "-jar", "target/accounts-service-1.0.0.jar"]
+# Comando de inicio
+ENTRYPOINT ["java", "-jar", "app.jar"]
