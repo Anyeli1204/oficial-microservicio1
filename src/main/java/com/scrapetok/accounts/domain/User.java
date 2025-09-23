@@ -60,12 +60,10 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Método helper para verificar si es admin
     public boolean isAdmin() {
         return this.role == Role.ADMIN;
     }
     
-    // Método helper para obtener nombre completo
     public String getFullName() {
         return this.firstname + " " + this.lastname;
     }

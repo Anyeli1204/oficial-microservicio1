@@ -47,12 +47,10 @@ public class AdminProfile {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Método helper para incrementar contador de preguntas respondidas
     public void incrementQuestionsAnswered() {
         this.totalQuestionsAnswered++;
     }
     
-    // Método helper para activar/desactivar admin
     public void toggleActive() {
         this.isActive = !this.isActive;
     }

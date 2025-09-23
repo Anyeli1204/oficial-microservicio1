@@ -73,7 +73,6 @@ public class AuthService {
         try {
             User saved = userRepository.save(newUser);
             
-            // Generar token JWT
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
@@ -85,24 +84,18 @@ public class AuthService {
                     .getAuthority()
                     .replace("ROLE_", "");
             
-            System.out.println("Generando token JWT para usuario: " + userDetails.getUsername());
             String token = jwtUtil.generateToken(userDetails.getUsername(), role);
-            System.out.println("Token generado exitosamente");
             
-            // Enviar email de bienvenida (solo si no es perfil de test)
             try {
                 emailService.sendWelcomeEmail(saved.getEmail(), saved.getFirstname());
-                System.out.println("Email de bienvenida enviado exitosamente");
             } catch (Exception e) {
                 System.out.println("Email de bienvenida no enviado (perfil de test): " + e.getMessage());
             }
             
-            System.out.println("Mapeando respuesta para usuario: " + saved.getId());
             UserSignUpResponseDTO response = modelMapper.map(saved, UserSignUpResponseDTO.class);
             response.setToken(token);
             response.setRole(role);
             response.setMessage("Usuario creado exitosamente");
-            System.out.println("Respuesta mapeada exitosamente");
             
             return response;
             
@@ -127,7 +120,6 @@ public class AuthService {
         ZonedDateTime zonedDateTime = obtenerFechaPeru();
         newUser.setCreationDate(zonedDateTime.toLocalDate());
         
-        // Crear perfil de administrador
         AdminProfile adminProfile = new AdminProfile();
         adminProfile.setUser(newUser);
         adminProfile.setAdmisionToAdminDate(zonedDateTime.toLocalDate());
@@ -215,11 +207,9 @@ public class AuthService {
     }
     
     public UpgradeToAdminResponseDTO upgradeUserToAdmin(UpgradeToAdminRequestDTO request) {
-        // Verifica que el admin que está promoviendo exista
         AdminProfile admin = adminProfileRepository.findById(request.getAdminId())
                 .orElseThrow(() -> new ResourceNotFoundException("Admin con ID " + request.getAdminId() + " no encontrado"));
 
-        // Verifica que el usuario a promover exista
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + request.getUserId() + " no encontrado"));
 
@@ -227,7 +217,6 @@ public class AuthService {
             throw new IllegalStateException("⚠️ Este usuario ya es administrador.");
         }
 
-        // Crear nuevo perfil de admin
         AdminProfile nuevoAdmin = new AdminProfile();
         nuevoAdmin.setUser(user);
         ZonedDateTime zonedDateTime = obtenerFechaPeru();
@@ -236,14 +225,11 @@ public class AuthService {
         nuevoAdmin.setIsActive(true);
         nuevoAdmin.setTotalQuestionsAnswered(0);
         
-        // Actualizar rol del usuario
         user.setRole(Role.ADMIN);
         
-        // Guardar cambios
         adminProfileRepository.save(nuevoAdmin);
         userRepository.save(user);
         
-        // Crear respuesta
         UpgradeToAdminResponseDTO responseDTO = new UpgradeToAdminResponseDTO();
         responseDTO.setId(user.getId());
         responseDTO.setEmail(user.getEmail());
@@ -264,21 +250,18 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + userId + " no encontrado"));
 
-        // Verificar si el email ya existe en otro usuario
         if (!user.getEmail().equals(request.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new EmailAlreadyInUseException("El email ya está en uso por otro usuario");
             }
         }
 
-        // Verificar si el username ya existe en otro usuario
         if (!user.getUsername().equals(request.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
                 throw new IllegalStateException("El username ya está en uso por otro usuario");
             }
         }
 
-        // Actualizar datos del usuario
         user.setFirstname(request.getFirstname());
         user.setLastname(request.getLastname());
         user.setUsername(request.getUsername());
@@ -292,27 +275,22 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + userId + " no encontrado"));
 
-        // Verificar contraseña actual
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("La contraseña actual es incorrecta");
         }
 
-        // Verificar que las nuevas contraseñas coincidan
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Las contraseñas nuevas no coinciden");
         }
 
-        // Actualizar contraseña
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
     public void deactivateUser(DeactivateUserRequestDTO request) {
-        // Verificar que el admin existe
         AdminProfile admin = adminProfileRepository.findById(request.getAdminId())
                 .orElseThrow(() -> new ResourceNotFoundException("Admin con ID " + request.getAdminId() + " no encontrado"));
 
-        // Verificar que el usuario a desactivar existe
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + request.getUserId() + " no encontrado"));
 
@@ -324,17 +302,14 @@ public class AuthService {
             throw new IllegalStateException("El usuario ya está desactivado");
         }
 
-        // Desactivar usuario
         user.setIsActive(false);
         userRepository.save(user);
     }
 
     public void activateUser(Long userId, Long adminId) {
-        // Verificar que el admin existe
         AdminProfile admin = adminProfileRepository.findById(adminId)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin con ID " + adminId + " no encontrado"));
 
-        // Verificar que el usuario a activar existe
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + userId + " no encontrado"));
 
@@ -342,7 +317,6 @@ public class AuthService {
             throw new IllegalStateException("El usuario ya está activo");
         }
 
-        // Activar usuario
         user.setIsActive(true);
         userRepository.save(user);
     }

@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/signup", "/auth/signin", "/auth/signupadmin").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/auth/profile/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/auth/profile/**").hasAnyRole("USER", "ADMIN")
@@ -83,17 +84,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Permitir orígenes específicos
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",
             "http://localhost:5173",
             "http://localhost:8080"
         ));
         
-        // Permitir métodos HTTP
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         
-        // Permitir headers
         configuration.setAllowedHeaders(List.of(
             "Authorization",
             "Content-Type",
@@ -104,7 +102,6 @@ public class SecurityConfig {
             "Access-Control-Request-Headers"
         ));
         
-        // Exponer headers
         configuration.setExposedHeaders(List.of(
             "Content-Disposition",
             "Content-Length",

@@ -66,6 +66,18 @@ management:
     mail:
       enabled: false
 
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    doc-expansion: none
+  show-actuator: true
+
 logging:
   level:
     com.scrapetok.accounts: INFO
