@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,7 +68,15 @@ public class AuthController {
     
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PatchMapping("/change-password/{userId}")
-    public ResponseEntity<String> changePassword(@PathVariable Long userId, @RequestBody @Valid ChangePasswordRequestDTO request) {
+    public ResponseEntity<String> changePassword(@PathVariable Long userId, @RequestBody @Valid ChangePasswordRequestDTO request, Authentication authentication) {
+        // Verificar que el usuario solo pueda cambiar su propia contraseña
+        String userEmail = authentication.getName();
+        UserProfileResponseDTO currentUser = authService.getUserProfileByEmail(userEmail);
+        
+        if (!currentUser.getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No puedes cambiar la contraseña de otro usuario");
+        }
+        
         authService.changePassword(userId, request);
         return ResponseEntity.ok("Contraseña cambiada exitosamente");
     }

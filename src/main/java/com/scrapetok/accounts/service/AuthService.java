@@ -73,19 +73,6 @@ public class AuthService {
         try {
             User saved = userRepository.save(newUser);
             
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-            
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String role = userDetails.getAuthorities().stream()
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No role found"))
-                    .getAuthority()
-                    .replace("ROLE_", "");
-            
-            String token = jwtUtil.generateToken(userDetails.getUsername(), role);
-            
             try {
                 emailService.sendWelcomeEmail(saved.getEmail(), saved.getFirstname());
             } catch (Exception e) {
@@ -93,8 +80,7 @@ public class AuthService {
             }
             
             UserSignUpResponseDTO response = modelMapper.map(saved, UserSignUpResponseDTO.class);
-            response.setToken(token);
-            response.setRole(role);
+            response.setRole("USER");
             response.setMessage("Usuario creado exitosamente");
             
             return response;
@@ -144,21 +130,19 @@ public class AuthService {
     
     public LoginResponseDTO login(LoginRequestDTO request) {
         try {
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-            
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String role = userDetails.getAuthorities().stream()
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No role found"))
-                    .getAuthority()
-                    .replace("ROLE_", "");
-            
-            String token = jwtUtil.generateToken(userDetails.getUsername(), role);
-            
             User usuario = userRepository.findByEmail(request.getEmail())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + request.getEmail()));
+            
+            if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
+                throw new BadCredentialsException("Credenciales inválidas");
+            }
+            
+            if (!usuario.getIsActive()) {
+                throw new BadCredentialsException("Usuario desactivado");
+            }
+            
+            String role = usuario.getRole().name();
+            String token = jwtUtil.generateToken(usuario.getEmail(), role);
             
             LoginResponseDTO response = modelMapper.map(usuario, LoginResponseDTO.class);
             response.setToken(token);
@@ -177,6 +161,20 @@ public class AuthService {
     public UserProfileResponseDTO getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + userId));
+        
+        UserProfileResponseDTO response = modelMapper.map(user, UserProfileResponseDTO.class);
+        
+        if (user.isAdmin() && user.getAdminProfile() != null) {
+            AdminProfileResponseDTO adminProfile = modelMapper.map(user.getAdminProfile(), AdminProfileResponseDTO.class);
+            response.setAdminProfile(adminProfile);
+        }
+        
+        return response;
+    }
+    
+    public UserProfileResponseDTO getUserProfileByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
         
         UserProfileResponseDTO response = modelMapper.map(user, UserProfileResponseDTO.class);
         
@@ -250,22 +248,31 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario con ID " + userId + " no encontrado"));
 
+        // Validar email si se está cambiando
         if (!user.getEmail().equals(request.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new EmailAlreadyInUseException("El email ya está en uso por otro usuario");
             }
         }
 
-        if (!user.getUsername().equals(request.getUsername())) {
+        // Validar username si se está cambiando
+        if (request.getUsername() != null && !user.getUsername().equals(request.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
                 throw new IllegalStateException("El username ya está en uso por otro usuario");
             }
         }
 
-        user.setFirstname(request.getFirstname());
-        user.setLastname(request.getLastname());
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        // Actualizar solo los campos que no son null
+        if (request.getFirstname() != null) {
+            user.setFirstname(request.getFirstname());
+        }
+        if (request.getLastname() != null) {
+            user.setLastname(request.getLastname());
+        }
+        if (request.getUsername() != null) {
+            user.setUsername(request.getUsername());
+        }
+        user.setEmail(request.getEmail()); // Email siempre se actualiza
 
         User savedUser = userRepository.save(user);
         return modelMapper.map(savedUser, UserProfileResponseDTO.class);

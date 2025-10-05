@@ -1,23 +1,20 @@
 # Multi-stage build para optimizar el tamaño de la imagen
-FROM maven:3.8.7-openjdk-17 AS build
+FROM maven:3.8-openjdk-17 AS build
 
 # Crear directorio de trabajo
 WORKDIR /app
 
 # Copiar archivos de configuración de Maven
 COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
 
 # Copiar código fuente
 COPY src src
 
 # Construir la aplicación
-RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Stage 2: Imagen final optimizada
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 
 # Crear directorio de trabajo
 WORKDIR /app

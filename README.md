@@ -1,247 +1,176 @@
-# Microservicio 1: Servicio de Cuentas y Perfiles
+# 🚀 ScrapeTok Accounts Service
 
-Este microservicio maneja la gestión de usuarios y administradores del sistema ScrapeTok, incluyendo autenticación, autorización y gestión de perfiles.
+Microservicio de gestión de cuentas y perfiles para la plataforma ScrapeTok, desarrollado con Spring Boot, PostgreSQL y Docker.
 
-## 🚀 Características
+## 📋 Características
 
-- **Registro de usuarios** y administradores
-- **Autenticación JWT** con Spring Security
-- **Gestión de perfiles** de usuarios y administradores
-- **Base de datos PostgreSQL** con migraciones
-- **Envío de emails** de bienvenida
-- **Docker** y Docker Compose para deployment
-- **Manejo de excepciones** global
+- ✅ **Registro de usuarios** (normales y administradores)
+- ✅ **Autenticación JWT** segura
+- ✅ **Gestión de perfiles** (actualización parcial y completa)
+- ✅ **Cambio de contraseñas** (solo propias)
+- ✅ **Gestión de usuarios** (activar/desactivar, promoción a admin)
+- ✅ **Envío de emails** de bienvenida
+- ✅ **Base de datos PostgreSQL** con migraciones
+- ✅ **Documentación OpenAPI/Swagger**
 
-## 🏗️ Arquitectura
+## 🛠️ Tecnologías
 
+- **Backend**: Spring Boot 3.2.0, Java 17
+- **Base de datos**: PostgreSQL 15
+- **Autenticación**: JWT (JSON Web Tokens)
+- **Email**: Spring Mail con Gmail SMTP
+- **Contenedores**: Docker & Docker Compose
+- **Documentación**: OpenAPI 3 / Swagger UI
+
+## 🚀 Despliegue Rápido
+
+### Prerequisitos
+- Docker y Docker Compose instalados
+- Git
+
+### 1. Clonar el repositorio
+```bash
+git clone <tu-repositorio-github>
+cd microservicio1
 ```
-src/main/java/com/scrapetok/accounts/
-├── AccountsServiceApplication.java    # Clase principal
-├── config/                           # Configuraciones
-│   ├── ModelMapperConfig.java
-│   └── SecurityConfig.java
-├── controller/                       # Controladores REST
-│   └── AuthController.java
-├── domain/                          # Entidades y DTOs
-│   ├── User.java
-│   ├── AdminProfile.java
-│   ├── enums/Role.java
-│   └── dto/
-├── exception/                       # Manejo de excepciones
-│   ├── GlobalExceptionHandler.java
-│   ├── EmailAlreadyInUseException.java
-│   └── ResourceNotFoundException.java
-├── repository/                      # Repositorios JPA
-│   ├── UserRepository.java
-│   └── AdminProfileRepository.java
-├── security/                        # Configuración de seguridad
-│   ├── JwtUtil.java
-│   ├── MyUserDetailsService.java
-│   └── JwtRequestFilter.java
-└── service/                         # Lógica de negocio
-    ├── AuthService.java
-    └── email/EmailService.java
+
+### 2. Configurar variables de entorno
+```bash
+cp env.example .env
+# Editar .env con tus valores reales
+```
+
+### 3. Ejecutar con Docker Compose
+```bash
+docker-compose -f docker-compose.production.yml up -d
+```
+
+### 4. Verificar funcionamiento
+```bash
+# Health check
+curl http://localhost:8081/api/v1/actuator/health
+
+# Crear usuario
+curl -X POST http://localhost:8081/api/v1/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123",
+    "firstname": "Test",
+    "lastname": "User",
+    "username": "testuser"
+  }'
+```
+
+## 🌐 Endpoints Disponibles
+
+### Públicos (Sin autenticación)
+- `POST /api/v1/auth/signup` - Registrar usuario
+- `POST /api/v1/auth/signupadmin` - Registrar administrador
+- `POST /api/v1/auth/signin` - Iniciar sesión
+- `GET /api/v1/actuator/health` - Health check
+
+### Autenticados (Requieren JWT)
+- `GET /api/v1/auth/users` - Listar usuarios (Solo ADMIN)
+- `GET /api/v1/auth/profile/{id}` - Obtener perfil
+- `PUT /api/v1/auth/profile/{id}` - Actualizar perfil
+- `PATCH /api/v1/auth/change-password/{id}` - Cambiar contraseña
+- `PATCH /api/v1/auth/upgrade-to-admin` - Promover a admin (Solo ADMIN)
+- `PATCH /api/v1/auth/deactivate-user` - Desactivar usuario (Solo ADMIN)
+- `PATCH /api/v1/auth/activate-user/{id}` - Activar usuario (Solo ADMIN)
+
+## 📚 Documentación API
+
+Una vez ejecutado el servicio, puedes acceder a la documentación Swagger en:
+- **Swagger UI**: http://localhost:8081/api/v1/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8081/api/v1/v3/api-docs
+
+## 🔧 Configuración
+
+### Variables de Entorno (.env)
+```bash
+# Base de datos
+DB_PASSWORD=tu_password_seguro
+
+# JWT
+JWT_SECRET=tu_clave_secreta_muy_larga_de_al_menos_32_caracteres
+
+# Email
+MAIL_USERNAME=tu-email@gmail.com
+MAIL_PASSWORD=tu_app_password
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
 ## 🗄️ Base de Datos
 
-### Tablas principales:
-- **users**: Información básica de usuarios
-- **admin_profiles**: Perfiles extendidos para administradores
+- **Puerto**: 5432
+- **Base de datos**: scrapetok_accounts
+- **Usuario**: postgres
+- **Migraciones**: Automáticas con Flyway
 
-### Esquema de base de datos:
-```sql
--- Tabla de usuarios
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    firstname VARCHAR(100) NOT NULL,
-    lastname VARCHAR(100) NOT NULL,
-    username VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'USER',
-    creation_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+## 🔍 Monitoreo
 
--- Tabla de perfiles de administrador
-CREATE TABLE admin_profiles (
-    id BIGINT PRIMARY KEY,
-    admision_to_admin_date DATE NOT NULL,
-    admision_to_admin_time TIME NOT NULL,
-    total_questions_answered INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
-);
-```
+- **Health Check**: `GET /api/v1/actuator/health`
+- **Logs**: `docker-compose -f docker-compose.production.yml logs -f`
 
-## 🔌 API Endpoints
-
-### Autenticación
-| Método | Endpoint | Descripción | Autenticación |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/signup` | Registro de usuario | No |
-| POST | `/api/v1/auth/signupadmin` | Registro de administrador | No |
-| POST | `/api/v1/auth/signin` | Login | No |
-
-### Gestión de Usuarios
-| Método | Endpoint | Descripción | Autenticación |
-|--------|----------|-------------|---------------|
-| GET | `/api/v1/auth/users` | Obtener todos los usuarios | ADMIN |
-| GET | `/api/v1/auth/profile/{userId}` | Obtener perfil de usuario | USER/ADMIN |
-
-### Health Check
-| Método | Endpoint | Descripción | Autenticación |
-|--------|----------|-------------|---------------|
-| GET | `/api/v1/actuator/health` | Estado del servicio | No |
-
-## 📝 Ejemplos de Uso
-
-### Registro de Usuario
-```bash
-curl -X POST http://localhost:8081/api/v1/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "usuario@ejemplo.com",
-    "password": "password123",
-    "firstname": "Juan",
-    "lastname": "Pérez",
-    "username": "juanperez"
-  }'
-```
-
-### Login
-```bash
-curl -X POST http://localhost:8081/api/v1/auth/signin \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "usuario@ejemplo.com",
-    "password": "password123"
-  }'
-```
-
-### Obtener Perfil (con JWT)
-```bash
-curl -X GET http://localhost:8081/api/v1/auth/profile/1 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-## 🐳 Docker
-
-### Construcción y ejecución con Docker Compose:
-```bash
-# Construir y ejecutar todos los servicios
-docker-compose up --build
-
-# Ejecutar solo el microservicio (requiere DB externa)
-docker-compose up accounts-service
-
-# Ejecutar con pgAdmin incluido
-docker-compose --profile admin up
-```
-
-### Variables de entorno:
-```bash
-# Copiar archivo de ejemplo
-cp .env.example .env
-
-# Editar variables según tu entorno
-nano .env
-```
-
-## 🔧 Configuración Local
-
-### Prerrequisitos:
-- Java 17+
-- Maven 3.6+
-- PostgreSQL 13+
-
-### Pasos:
-1. **Clonar y configurar:**
-```bash
-cd microservicio1-accounts
-cp .env.example .env
-# Editar .env con tus configuraciones
-```
-
-2. **Configurar base de datos:**
-```bash
-# Crear base de datos PostgreSQL
-createdb scrapetok_accounts
-```
-
-3. **Ejecutar migraciones:**
-```bash
-# Las migraciones se ejecutan automáticamente al iniciar
-mvn spring-boot:run
-```
-
-4. **Verificar funcionamiento:**
-```bash
-curl http://localhost:8081/api/v1/actuator/health
-```
-
-## 🔐 Seguridad
-
-- **JWT**: Tokens con expiración configurable
-- **CORS**: Configurado para orígenes específicos
-- **Validación**: Validación de entrada en DTOs
-- **Encriptación**: Contraseñas encriptadas con BCrypt
-- **Roles**: Sistema de roles USER/ADMIN
-
-## 📊 Monitoreo
-
-- **Health Check**: `/api/v1/actuator/health`
-- **Métricas**: `/api/v1/actuator/metrics`
-- **Info**: `/api/v1/actuator/info`
-
-## 🧪 Testing
+## 🛠️ Comandos Útiles
 
 ```bash
-# Ejecutar tests unitarios
-mvn test
+# Ver estado
+docker-compose -f docker-compose.production.yml ps
 
-# Ejecutar tests con cobertura
-mvn test jacoco:report
+# Ver logs
+docker-compose -f docker-compose.production.yml logs -f accounts-service
+
+# Reiniciar
+docker-compose -f docker-compose.production.yml restart accounts-service
+
+# Detener
+docker-compose -f docker-compose.production.yml down
+
+# Detener y eliminar volúmenes
+docker-compose -f docker-compose.production.yml down -v
 ```
 
-## 🚀 Deployment
+## 📝 Estructura del Proyecto
 
-### Variables de entorno para producción:
-```bash
-SPRING_PROFILES_ACTIVE=prod
-DB_HOST=your-db-host
-DB_PASSWORD=secure-password
-JWT_SECRET=very-secure-secret
-MAIL_USERNAME=your-email
-MAIL_PASSWORD=your-app-password
 ```
-
-### Railway/Heroku:
-1. Conectar repositorio
-2. Configurar variables de entorno
-3. Deploy automático
+microservicio1/
+├── src/main/java/com/scrapetok/accounts/
+│   ├── controller/          # Controladores REST
+│   ├── service/            # Lógica de negocio
+│   ├── domain/             # Entidades y DTOs
+│   ├── repository/         # Repositorios JPA
+│   ├── security/           # Configuración JWT
+│   ├── config/             # Configuraciones Spring
+│   └── exception/          # Manejo de excepciones
+├── src/main/resources/
+│   ├── application*.yml    # Configuraciones por perfil
+│   └── db/migration/       # Scripts de migración
+├── docker-compose.production.yml
+├── Dockerfile
+├── env.example
+└── README.md
+```
 
 ## 🤝 Contribución
 
 1. Fork el proyecto
-2. Crear feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a branch (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
-## 👥 Equipo
+## 👨‍💻 Autor
 
-- **ANYELI** - Desarrollo y automatización de deployment
-- **ScrapeTok Team** - Arquitectura y revisión
+**Anyeli Tamara** - [@anyeli1234](https://github.com/anyeli1234)
 
-## 📞 Soporte
+---
 
-Para soporte, contacta a: support@scrapetok.com
+⭐ ¡No olvides dar una estrella al proyecto si te fue útil!
