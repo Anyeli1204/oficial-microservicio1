@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,9 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+    @Value("${api.base-url:http://localhost:8081/api/v1}")
+    private String baseUrl;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -28,11 +32,8 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("http://34.201.93.104:8081/api/v1")
-                                .description("Servidor de producción"),
-                        new Server()
-                                .url("http://localhost:8081/api/v1")
-                                .description("Servidor de desarrollo")
+                                .url(baseUrl)
+                                .description("Servidor actual")
                 ));
     }
 }

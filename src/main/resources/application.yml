@@ -54,6 +54,10 @@ jwt:
 cors:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
 
+# API Configuration
+api:
+  base-url: ${API_BASE_URL:http://localhost:8081/api/v1}
+
 # Management endpoints
 management:
   endpoints:

@@ -49,6 +49,10 @@ jwt:
 cors:
   allowed-origins: ${ALLOWED_ORIGINS}
 
+# API Configuration
+api:
+  base-url: ${API_BASE_URL}
+
 # Management endpoints
 management:
   endpoints:
