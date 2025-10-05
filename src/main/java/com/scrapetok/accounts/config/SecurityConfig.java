@@ -87,14 +87,17 @@ public class SecurityConfig {
         // Obtener orígenes permitidos desde variables de entorno
         String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
         if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
-            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+            if (allowedOrigins.equals("*")) {
+                configuration.addAllowedOriginPattern("*"); // permite todos los orígenes
+            } else {
+                configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+            }
         } else {
-            // Valores por defecto si no se especifica la variable de entorno
             configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8080",
-                "http://localhost:8081"
+                    "http://localhost:3000",
+                    "http://localhost:5173",
+                    "http://localhost:8080",
+                    "http://localhost:8081"
             ));
         }
         
