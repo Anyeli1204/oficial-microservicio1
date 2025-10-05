@@ -53,7 +53,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-    
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -63,6 +63,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/signup", "/auth/signin", "/auth/signupadmin").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/auth/health").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/auth/users").hasRole("ADMIN")
@@ -76,7 +77,7 @@ public class SecurityConfig {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
     
