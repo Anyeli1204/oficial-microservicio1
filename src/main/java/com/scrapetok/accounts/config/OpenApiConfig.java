@@ -28,11 +28,11 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8081/api/v1")
-                                .description("Servidor de desarrollo"),
+                                .url("http://34.201.93.104:8081/api/v1")
+                                .description("Servidor de producción"),
                         new Server()
-                                .url("https://tu-dominio.com/api/v1")
-                                .description("Servidor de producción")
+                                .url("http://localhost:8081/api/v1")
+                                .description("Servidor de desarrollo")
                 ));
     }
 }

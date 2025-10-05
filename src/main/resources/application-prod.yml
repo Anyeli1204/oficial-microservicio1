@@ -77,6 +77,10 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
     doc-expansion: none
+    display-request-duration: true
+    show-extensions: true
+    show-common-extensions: true
+    try-it-out-enabled: true
   show-actuator: true
 
 logging:
