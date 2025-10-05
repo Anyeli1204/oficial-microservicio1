@@ -94,4 +94,10 @@ public class AuthController {
         authService.activateUser(userId, adminId);
         return ResponseEntity.ok("Usuario activado exitosamente");
     }
+
+    @GetMapping("/health")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("OK");
+    }
 }
