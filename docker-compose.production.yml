@@ -48,6 +48,18 @@ services:
         condition: service_healthy
     networks:
       - scrapetok-network
+    
+  # Adminer para gestionar la base de datos
+  adminer:
+    image: adminer
+    container_name: scrapetok_adminer_prod
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - scrapetok-network
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
